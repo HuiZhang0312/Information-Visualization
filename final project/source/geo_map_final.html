@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<meta charset="utf-8">
+
+	<head>
+		<title>San Francisco Neighborhoods</title>
+		<script src="https://d3js.org/d3.v4.min.js"></script>
+	</head>
+
+	<body>
+
+    <style type="text/css">
+        .tooltip {
+            background: indigo;
+            color: red;
+            display: none;
+            font-size: 16px;
+            left: 100px;
+            padding: 10px;
+            position: absolute;
+            text-align: center;
+            top: 95px;
+            width: 120px;
+            border-style: solid;
+            border-width: 5px;
+            border-color: grey;
+          }
+
+          .legend {
+            line-height: 18px;
+            color: #555;
+          }
+          
+          .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+          }
+
+    </style>
+
+		<script>
+		    var width = 960,
+        height = 640;
+        
+var ds = [
+  {zip:94102, name:"Hayes Valley"},
+  {zip:94103, name:"SoMa"},
+  {zip:94105, name:"Financial District"},
+  {zip:94107, name:"Portrero Hill"},
+  {zip:94108, name:"Chinatown"},
+  {zip:94109, name:"Russian Hill"},
+  {zip:94110, name:"Mission District"},
+  {zip:94111, name:"Embarcadero North"},
+  {zip:94112, name:"Ingleside"},
+  {zip:94114, name:"Castro"},
+  {zip:94115, name:"Pacific Heights"},
+  {zip:94116, name:"Outer Sunset"},
+  {zip:94117, name:"Haight"},
+  {zip:94118, name:"Richmond"},
+  {zip:94121, name:"Outer Richmond"},
+  {zip:94122, name:"Sunset District"},
+  {zip:94123, name:"Marina"},
+  {zip:94124, name:"Bayview"},
+  {zip:94127, name:"West Portal"},
+  {zip:94129, name:"Presidio"},
+  {zip:94130, name:"Treasure Island"},
+  {zip:94131, name:"Twin Peaks"},
+  {zip:94132, name:"Lake Merced"},
+  {zip:94133, name:"North Beach"},
+  {zip:94134, name:"Visitacion Valley"},
+  {zip:94158, name:"Outer Mission"},
+  {zip:94104, name:"Embarcadero"}
+]
+
+        function getColor(d){
+          if (d < 500){
+            return "#f7fcfd";
+          } else if (d < 1000){
+            return "#e5f5f9";
+          } else if (d < 1500){
+            return "#ccece6";
+          } else if (d < 2000){
+            return "#99d8c9";
+          } else if (d < 2500){
+            return "#66c2a4";
+          } else if (d < 3000){
+            return "#41ae76";
+          } else if (d < 3500){
+            return "#238b45";
+          } else {
+            return "#005824";
+          }
+        }
+            var tooltip = d3.select("body")
+              .append('div')
+              .attr('class', 'tooltip');
+              tooltip.append('div')
+              .attr('class', 'num');
+            
+            var svg = d3.select("body")
+                  .append("svg")
+                  //.attr("x", "100")
+                  //.attr("y", "100")
+                  .attr( "width", width)
+                  .attr( "height", height)
+				          .attr("align","center")
+                  //.attr("display", "block");
+                  
+            var g = svg.append( "g" );
+            
+            d3.queue()   // queue function loads all external data files asynchronously 
+                .defer(d3.json, "data/zip.json") //our geometries
+                .defer(d3.json, "data/stations.json") //stations
+                .defer(d3.json, "data/subscribers.json")
+                //.defer(d3.csv, "data/sfneighborhoods.csv") //neighborhood subscription data 
+                .await(processData);
+                
+            function processData(error, sf, stations, subs){
+                //console.log(sf.features.length);
+                var projection = d3.geoMercator()
+                                    .scale(1)
+                                    .translate([0, 0]);
+
+                // path generator, translate geoJson coordinates into SVG path codes
+                var path = d3.geoPath()
+                        .projection(projection);
+                        
+                var b = path.bounds(sf),
+                s = 0.95/Math.max((b[1][0] - b[0][0])/width, (b[1][1] - b[0][1])/height),
+                t = [(width - s *(b[1][0] + b[0][0]))/2, (height - s * (b[1][1] + b[0][1]))/2];
+                
+                projection
+                    .scale(s)
+                    .translate(t);
+                
+                g.append("rect").attr('width', width).attr('height', height)
+                    .style('stroke', 'black').style('fill', 'none');
+
+                var rateById = {}; // Create empty object for holding dataset
+                  subs.forEach(function(d) {
+                    rateById[d.zip] = +d.subs; // Create property for each ID (zip), give it value from rate
+                  });
+
+                sf.features.forEach(function(d){
+                  //console.log(d.properties.zip)
+                });
+            
+                g.selectAll("path").data(sf.features).enter().append("path")
+                    .attr("d", path)
+                    .style("fill", function(d){
+                      if (rateById[d.properties.id]){
+                        return getColor(rateById[d.properties.id]); 
+                      } else {
+                        return "#e5e6e8";
+                      }
+                    })
+                    .style("stroke-width", "1")
+                    .style("stroke", "black")
+
+                    .on('mouseover', function(d){
+                        var num = rateById[d.properties.id] 
+                        var key = d.properties.id
+                        var name;
+                        for (var i in ds) {
+                          if (ds.hasOwnProperty(i)) {
+                            if(ds[i].zip == key){
+                            name = ds[i].name;
+                            }
+                          }
+                        }
+                        tooltip.style('display', 'block')
+                        tooltip.style('background', getColor(rateById[d.properties.id]))
+                        tooltip.select('.num').html(name + ": " + num + ' subscriber rides');
+                      })
+
+                      .on('mouseout', function() {
+                          tooltip.style('display', 'none');
+                      })
+
+                      .on('mousemove', function(d) {
+                        tooltip.style('top', (d3.event.layerY + 10) + 'px')
+                        .style('left', (d3.event.layerX + 10) + 'px');
+                      });
+
+                    
+                svg.selectAll(".symbol")
+                  .data(stations.features)
+                  .enter().append("path")
+                  .attr("class", "symbol")
+                  .attr("d", path.pointRadius(5))
+                  .style("fill", "#3182bd")
+                  .on('mouseover', function(d){
+                        var name = d.properties.name
+                        tooltip.style('display', 'block')
+                        tooltip.style('background', "#3182bd")
+                        tooltip.style('color', "white")
+                        tooltip.select('.num').html(name);
+                  })
+
+                  .on('mouseout', function() {
+                        tooltip.style('display', 'none')
+                        tooltip.style('color', "red");
+                  });
+
+                  
+
+          }
+
+          var title = d3.select("body")
+          .append("div")
+          .attr("x", (width / 2))             
+          .attr("y", 0 - (height / 2))
+          .attr("text-anchor", "middle")  
+          .style("font-size", "18px") 
+          .style("text-decoration", "underline")  
+          .text("Number of Subscriber Rides by Neighborhood");
+
+          var legendRectSize = 18;
+          var legendSpacing = 4;
+
+          var c = ["#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#005824"]
+          var color = d3.scaleOrdinal(c)
+              .domain(["<500", "500-999", "1000-1499", "1500-1999", "2000-2499", "2500-2999", "3000-3499", "3500+"]);
+              //.range(["#f7fcfd", "#e5f5f9", "#ccece6", "#99d8c9", "#66c2a4", "#41ae76", "#238b45", "#005824"]);
+
+          var legend = svg.selectAll('.legend')
+                          .data(color.domain())
+                          .enter()
+                          .append('g')
+                          .attr('class', 'legend')
+                          .attr('transform', function(d, i) {
+                            var height = legendRectSize;
+                            var x = 10;
+                            var y = i * height + 10;
+                            return 'translate(' + x + ',' + y + ')';
+                          });
+
+        legend.append('rect')
+          .attr('width', legendRectSize)
+          .attr('height', legendRectSize)
+          .style('fill', color)
+          .style('stroke', color);
+
+        legend.append('text')
+          .attr('x', legendRectSize + legendSpacing)
+          .attr('y', legendRectSize - legendSpacing)
+          .text(function(d) { return d; });
+
+// var key = 94158;
+// var name;
+// for (var i in ds) {
+//    if (ds.hasOwnProperty(i)) {
+//     if(ds[i].zip == key){
+//      name = ds[i].name;
+//     }
+//   }
+// }
+// console.log(key + " -> " + name)
+
+		</script>
+	</body>
+</html>

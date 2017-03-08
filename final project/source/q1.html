@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<meta charset="utf-8">
+
+	<head>
+		<title>San Francisco BikeShare Trip Flow 2016</title>
+		<link rel="stylesheet" href="../bootstrap/bootstrap.min.css">
+		<link rel="stylesheet" href="../main.css" />
+		<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cormorant+Garamond" />
+
+		<script src="../d3/d3.js"></script>
+		<script src="../bootstrap/jquery.min.js"></script>
+		<script src="../bootstrap/bootstrap.min.js"></script>
+		<style type="text/css">
+			#tt { pointer-events: none;color:white;}
+			#tipContainer {  font-size:16px;position:absolute;width:180px;z-index:100;background-repeat:no-repeat;text-align:left;line-height:20px;}
+			#tipLocation {font-weight:normal;font-family:Georgia; font-style: Italic; color:white;margin:0px;padding:10px 10px;background:#333;font-size:14px;}
+			#tipCount {font-weight:bold;font-size:32px;letter-spacing:-1px;margin:0px;padding:0px 10px 10px 10px;color:#333;}
+			#tipKey {font-weight:normal;font-size:10px;color:#333;margin:0px;padding:5px 0px 5px 10px;background:rgba(218,218,218,0.5);}
+			#tt2 { pointer-events: none;color:white;}
+			#tipContainer2 {  font-size:16px;position:absolute;width:250px;z-index:100;background-repeat:no-repeat;text-align:left;line-height:20px;}
+			#tipLocation2 {font-weight:normal;font-family:Georgia; font-style: Italic; color:white;margin:0px;padding:10px 10px;background:#333;font-size:14px;}
+			#tipCount2 {font-weight:bold;font-size:32px;letter-spacing:-1px;margin:0px;padding:0px 10px 10px 10px;color:#333;}
+			#tipKey2 {font-weight:normal;font-size:10px;color:#333;margin:0px;padding:5px 0px 5px 10px;background:rgba(218,218,218,0.5);}
+			.tipClear { clear:both;}
+			.x-axis path {stroke:white;fill:none;}
+			.x-axis line {fill: none;stroke: none;stroke-opacity:.8;shape-rendering: crispEdges;}
+			/*.bars rect {fill:#e5e6e8;fill-opacity:.9;}*/
+			.title {font-weight: bold;}
+			#precise-value {fill:black;font-size: 12px;}
+			#area1 {position: relative; left: 50px;}
+			#area2 {position: relative; left: 100px;}
+			.description{height: 180px;}
+		</style>
+
+	</head>
+
+	<body>
+		<div class="container">
+        <div class="header">
+           	<!--  <h1>Visualization of Bike Sharing Rides in Bay Area</h1> -->
+            <h1><b>San Francisco BikeShare Trip Flow</b></h1>
+            <div class="header_list">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="q1.html">Stations</a></li>
+                    <li><a href="q2.html">Time</a></li>
+                    <li><a href="q3.html">Weather</a></li>
+                    <li><a href="q4.html">Subscribers</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="description">
+            <p>This visualization shows the trip flow among all stations in San Francisco from September 2015 to Augest 2016.</p>
+            <p>Green color marks those stations that have a larger number of incoming trips. Yellow color marks those stations that have a larger number of outgoing trips. The size of circle represents the size of net coming trips. The bar chart shows all stations sorted by number of net coming trips. </p>
+            <p>Hover over circles or bars to see detailed information. Click on circles to see the distribution of bike trips for the clicked station.</P>
+        </div>
+
+		<div id="title"></div>
+        <div class="row">
+		    <div class="col-md-5" id="area1">
+		    	<div id = "map"></div>
+		    </div>
+		    <div class="col-md-5" id="area2"></div>
+		</div>
+		<script src="../bootstrap/jquery.min.js"></script>
+		<script src="../bootstrap/bootstrap.min.js"></script>
+		<script>
+		// geo map part
+		var geowidth = 600,
+		    geoheight = 650;
+		var geopath;
+		var green = "#3d8f81";
+		var yellow = "#a96a46";
+		var blue = "#0070CD";
+		var grey = "#e5e6e8";
+		
+		// circle represents the net number
+		var circleSize = d3.scaleLinear().range([5,2500]).domain([0, 3000]);
+		// line represents going and coming
+		var lineSize = d3.scaleLinear().range([2,25]).domain([0, 3500]);
+		
+		//initialize html tooltip
+		var tooltip = d3.select("#area1")
+		                .append("div")
+		                .attr("id", "tt")
+		                .style("z-index", "10")
+		                .style("position", "absolute")
+		                .style("visibility", "hidden");
+		
+		var tooltip2 = d3.select("#area1")
+		                .append("div")
+		                .attr("id", "tt2")
+		                .style("z-index", "10")
+		                .style("position", "absolute")
+		                .style("visibility", "hidden");
+		
+		var svg = d3.select("#map")
+		      .append("svg")
+		      .attr( "width", geowidth)
+		      .attr( "height", geoheight)
+		      .attr("display", "block");
+		      
+		var g = svg.append( "g" );
+		
+		d3.queue()
+		    .defer(d3.json, "data/sf.geojson") 
+		    .defer(d3.json, "data/stations.json")
+		    .await(processData);
+		    
+		function processData(error, sf, stations){
+		    var projection = d3.geoMercator()
+		                        .scale(1)
+		                        .translate([0, 0]);
+		                        
+		    geopath = d3.geoPath()
+		            .projection(projection);
+		            
+		    var b = geopath.bounds(sf),
+		    s = 3 / Math.max((b[1][0] - b[0][0]) / geowidth, (b[1][1] - b[0][1]) / geoheight),
+		    t = [(geowidth - s * (b[1][0] + b[0][0])) / 2 - geowidth / 1.5, (geoheight - s * (b[1][1] + b[0][1])) / 2 + geoheight / 2.5];
+		    
+		    projection
+		        .scale(s)
+		        .translate(t);
+		
+		    g.selectAll("path").data(sf.features).enter().append("path")
+		        .attr("d", geopath)
+		        .style("fill", grey)
+		        .style("stroke-width", "1")
+		        .style("stroke", "white");
+		}
+		
+		var coming, going;
+		d3.csv("data/coming.csv", function (data) {
+		    coming = data;
+		});
+		
+		d3.csv("data/going.csv", function (data) {
+		    going = data;
+		    d3.json("data/stations.json", function (stations) {
+		        for (var i = 0; i < going.length; i++) {
+		            var dataName = going[i].Name;
+		            var tempObj = {};
+		            for (var propt in going[i]) {
+		              var valz = parseInt(going[i][propt]);
+		              tempObj[propt] = valz;
+		            }
+		        
+		            //Find the corresponding state inside the GeoJSON
+		            for (var j = 0; j < stations.features.length; j++) {
+		                var stationName = stations.features[j].properties.name;
+		                if (dataName != stationName){
+		                    continue;
+		                }
+		    
+		                for (var propt in tempObj) {
+		                    if(!isNaN(tempObj[propt])) {
+		                        stations.features[j].properties[propt] = tempObj[propt];
+		                    }
+		                }
+		                break;
+		            }
+		        }
+		        g.selectAll("circle")
+		         .data(stations.features.sort(function(a, b) { 
+		             return Math.abs(b.properties.total_going - b.properties.total_coming) - Math.abs(a.properties.total_going - a.properties.total_coming);
+		         }))
+		         .enter().append("path")
+		         .attr("d", geopath.pointRadius(function(d) { 
+		             var diff = d.properties.total_going - d.properties.total_coming;
+		             return circleSize(Math.sqrt(Math.abs(diff)/Math.PI));
+		         }))
+		         .attr("id", function(d) {
+		             return d.id;
+		         })
+		         .attr("fill", function(d) {
+		              var diff = d.properties.total_coming - d.properties.total_going;
+		              if(diff>0) {
+		              return green;
+		              } else {
+		              return yellow;
+		              }
+		         })
+		         .attr("fill-opacity", "0.5")
+		         .attr("stroke", "#fff")
+		         .attr("stroke-weight", "0.5")
+		         .on("mouseover", function (d) {
+		              return toolOver(d, this);
+		         })
+		         .on("mousemove", function (d) {
+		              var m = d3.mouse(this);
+		              mx = m[0];
+		              my = m[1];
+		              return toolMove(mx, my, d);
+		         })
+		         .on("mouseout", function (d) {
+		              return toolOut(d, this);
+		         })
+		         .on("click", function(d) {clicked(d);});
+		    }); 
+		});
+		
+		function clicked(selected) {
+		    //var coming = selected.properties;
+		    var selName = selected.properties.name;
+		  
+		    var homex = geopath.centroid(selected)[0];
+		    var homey = geopath.centroid(selected)[1];
+		
+		    g.selectAll(".goingline")
+		     .attr("stroke-dasharray", 0)
+		     .remove();
+		  
+		    g.selectAll(".goingline")
+		     .data(going)
+		     .enter().append("path")
+		     .attr("class", "goingline")
+		     .attr("d", function(d,i) 
+		        {
+		        var id = d.Id;
+		        // (selName -> the i th station) - (the i th station -> selName)
+		        var finalval = coming[i][selName] - going[i][selName];
+		        var theState = d3.select("#\\3" + id + " ");
+		        if (id >= 10){
+		            theState = d3.select("#\\3" + Math.floor(id / 10) + " " + id % 10);
+		        }
+		        if(!isNaN(finalval)) {
+		            var startx = geopath.centroid(theState._groups[0][0].__data__)[0];
+		            var starty = geopath.centroid(theState._groups[0][0].__data__)[1];
+		            if(finalval > 0) {
+		                return "M" + homex + "," + homey + " Q" + (startx + homex)/2 + " " + (starty + homey)/1.5 +" " + startx+" "   + starty;
+		            } else {
+		                return "M" + startx + "," + starty + " Q" + (startx + homex)/2 + " " + (starty + homey)/2.5 +" " + homex+" "   + homey;
+		            }
+		        }
+		        })
+		    
+		     .call(transition)
+		     .attr("stroke-width", function(d,i) {
+		        var finalval = coming[i][selName] - going[i][selName];
+		        return lineSize(parseInt(Math.abs(finalval)));
+		        })
+		     .attr("stroke", function(d,i) {
+		        var finalval = coming[i][selName] - going[i][selName];
+		        if(finalval > 0) {
+		          return yellow;
+		        } else {
+		          return green;
+		        }
+		      })
+		     .attr("fill", "none")
+		     .attr("opacity", 0.5)
+		     .attr("stroke-linecap", "round")
+		     .on("mouseover", function (d) {
+		          return toolOver2(d, this);
+		        })
+		     .on("mousemove", function (d,i) {
+		          var m = d3.mouse(this);
+		          var mx = m[0];
+		          var my = m[1];
+		          return toolMove2(mx, my, selName, d.Name, coming[i][selName], going[i][selName]);
+		        })
+		     .on("mouseout", function (d) {
+		          return toolOut2(d, this);
+		        });
+		} // end clicked()
+		
+		function transition(path) {
+		    path.transition()
+		        .duration(1500)
+		        .attrTween("stroke-dasharray", tweenDash);
+		}
+		
+		function tweenDash() {
+		    var l = this.getTotalLength();
+		    var i = d3.interpolateString("0," + l, l + "," + l);
+		    return function(t) { return i(t); };
+		}
+		
+		function toolOver(v, thepath) {
+			var thisid = thepath.id;
+			var barid = "bar" + thisid;
+			var theBar = d3.select("#" + barid)._groups[0][0];
+			var barGroup = d3.select(theBar.parentNode);
+			barGroup.select("rect").style("fill", blue);
+		    barGroup.select("#precise-value").style("font-weight", "bold");
+		    barGroup.select("#precise-value").style("font-size", "14px");
+		    barGroup.select("#precise-value").style("fill", "white");
+		    barGroup.selectAll("text").style("font-weight", "bold");
+		    barGroup.selectAll("text").style("fill", blue);
+			
+		    d3.select(thepath)
+		      .attr("fill-opacity", "1.0")
+		      .style("cursor", "pointer");
+		    return tooltip.style("visibility", "visible");
+		}
+		
+		function toolOut(m, thepath) {
+			var thisid = thepath.id;
+			var barid = "bar" + thisid;
+			var theBar = d3.select("#" + barid)._groups[0][0];
+			var barGroup = d3.select(theBar.parentNode);
+			if (barGroup.select("rect")._groups[0][0].__data__.net_coming >= 0){
+		    	barGroup.select("rect").style("fill", green);
+		    } else {
+		    	barGroup.select("rect").style("fill", yellow);
+		    }
+		    barGroup.select("#precise-value").style("font-weight", "normal");
+		    barGroup.select("#precise-value").style("font-size", "12px");
+		    barGroup.select("#precise-value").style("fill", "black");
+		    barGroup.selectAll("text").style("font-weight", "normal");
+		    barGroup.selectAll("text").style("fill", "black");
+		    d3.select(thepath).attr("fill-opacity", "0.5")
+								.style("cursor", "");
+		    return tooltip.style("visibility", "hidden");
+		}
+		
+		function toolMove(mx, my, data) {
+		    if (mx < 180) {
+		        mx = 180;
+		    }
+		    if (my < 135) {
+		        my = 135;
+		    }
+		    return tooltip.style("top", (my - 135)  + "px")
+		                  .style("left", (mx - 180) + "px")
+		                  .html("<div id='tipContainer'><div id='tipLocation'><b>" 
+		                  + data.properties.name + "</b></div><div id='tipKey'>Trips Out: <b>" 
+		                  + data.properties.total_going
+		                  + "</b><br>Trips In: <b>" 
+		                  + data.properties.total_coming
+		                  + "</b><br>Net Trips: <b>" 
+		                  + (data.properties.total_coming - data.properties.total_going)
+		                  + "</b></div><div class='tipClear'></div> </div>");
+		}
+		
+		function toolOver2(v, thepath) {
+		    d3.select(thepath)
+		      .attr("opacity", "1")
+		      .style("cursor", "pointer");
+		    return tooltip2.style("visibility", "visible");
+		}
+		
+		function toolOut2(m, thepath) {
+		    d3.select(thepath)
+		    .attr("opacity", "0.5")
+		    .style("cursor", "");
+		    return tooltip2.style("visibility", "hidden");
+		}
+		
+		function toolMove2(mx, my, home, end, homeToEnd, endToHome) {
+		    var diff = endToHome - homeToEnd;
+		    if (mx < 180) {
+		        mx = 180;
+		    }
+		    if (my < 135) {
+		        my = 135;
+		    }
+		    return tooltip2.style("top", (my - 135)  + "px")
+		                   .style("left", (mx - 180) + "px")
+		                   .html("<div id='tipContainer2'><div id='tipLocation'><b>" 
+		                   + home + "/" + end + "</b></div><div id='tipKey2'>" 
+		                   + home + " to " + end +": <b>" + homeToEnd 
+		                   + "</b><br>" + end + " to " + home 
+		                   +": <b>" + endToHome + "</b><br>Net Flow (" 
+		                   + home + "): <b>" + diff 
+		                   + "</b></div><div class='tipClear'></div> </div>");
+		}
+		
+		// begin of barchart part -----------------------------------------------------------
+		
+		var margin = {top: 50, bottom: 0, left:30, right: 40};
+		var width = 500 - margin.left - margin.right;
+		var height = 650 - margin.top - margin.bottom;
+		
+		var xScale = d3.scaleLinear().range([150, 550]);
+		var yScale = d3.scaleBand().range([0, height]).round(true).paddingInner(0.2);
+		
+		var xAxis = d3.axisBottom()
+					    .scale(xScale);
+
+		var yAxis = d3.axisLeft()
+					    .scale(yScale)
+					    .tickSize(0)
+					    .tickPadding(6);
+		
+		var baseSvg = d3.select("#area2").append("svg")
+		            .attr("width", width+margin.left+margin.right + 300)
+		            .attr("height", height+margin.top+margin.bottom)
+		            .attr("align","center")
+		            .attr("class", "base-svg");
+		
+		var barSvg = baseSvg.append("g")
+		            .attr("transform", "translate("+margin.left+","+margin.top+")")
+		            .attr("width", width)
+		            .attr("height", height)
+		            .attr("class", "bar-svg");
+		        
+	    d3.json("data/net_coming.json", function(bardata) {
+	        xScale.domain(d3.extent(bardata, function(d) { return d.net_coming; }));
+	        yScale.domain(bardata.map(function(d) { return d.station; }));
+	    
+	        var groups = barSvg.append("g").attr("class", "labels")
+	                    .selectAll("text")
+	                    .data(bardata)
+	                    .enter()
+	                    .append("g");
+	    
+	        groups.append("text")
+	        		.filter(function(d){return d.net_coming < 0;})
+	                .attr("x", xScale(0) + 10)
+	                .attr("y", function(d) { return yScale(d.station); })
+	                .text(function(d) { return d.station; })
+	                .attr("text-anchor", "start")
+	                .attr("font-size", "12px")
+	                .attr("dy", "0.9em")
+	                .attr("dx", "-.32em")
+	                .attr("id", function(d,i) { return "label"+i; });
+	                
+	        groups.append("text")
+	        		.filter(function(d){return d.net_coming >= 0;})
+	                .attr("x", xScale(0) - 10)
+	                .attr("y", function(d) { return yScale(d.station); })
+	                .text(function(d) { return d.station; })
+	                .attr("text-anchor", "end")
+	                .attr("font-size", "12px")
+	                .attr("dy", "0.9em")
+	                .attr("dx", "-.32em")
+	                .attr("id", function(d,i) { return "label"+i; });
+	                    
+	        var bars = groups
+	            .attr("class", "bars")
+			    .append("rect")
+			    .attr("x", function(d) { return xScale(Math.min(0, d.net_coming)); })
+			    .attr("y", function(d) { return yScale(d.station); })
+			    .attr("width", function(d) { return Math.abs(xScale(d.net_coming) - xScale(0)); })
+			    .attr("height", yScale.bandwidth())
+			    .attr("id", function(d, i){return "bar"+d.id;})
+			    .attr("fill", function(d){
+			    	if (d.net_coming >= 0){
+			    		return green;
+			    	} else {
+			    		return yellow;
+			    	}
+			    });
+	    
+	        bars.on("mouseover", function(d){
+	                return mouseover(d, this);
+	            })
+	            .on("mousemove", function (d) {
+	                  return mousemove(d, this);
+	             })
+	            .on("mouseout", function(d){
+	                return mouseout(d, this);
+	            });
+	    	
+	    	barSvg.append("g")
+			      .attr("class", "x-axis")
+			      .attr("transform", "translate(0," + -20 + ")")
+			      .call(xAxis);
+	    });
+		
+		function mouseover(d, selected){
+		    var currentGroup = d3.select(selected.parentNode);
+		    currentGroup.select("rect").style("fill", blue);
+		    currentGroup.select("#precise-value").style("font-weight", "bold");
+		    currentGroup.select("#precise-value").style("font-size", "14px");
+		    currentGroup.select("#precise-value").style("fill", "white");
+		    currentGroup.selectAll("text").style("font-weight", "bold");
+		    currentGroup.selectAll("text").style("fill", blue);
+		    
+		    var id = parseInt(selected.id.substring(3));
+		    var theCircle = d3.select("#\\3" + id + " ");
+		    if (id >= 10){
+		        theCircle = d3.select("#\\3" + Math.floor(id / 10) + " " + id % 10);
+		    }
+		    theCircle
+		      .attr("fill-opacity", "1.0")
+		      .style("cursor", "pointer");
+		    d3.select("#tt")
+		      .style("visibility", "visible");
+		}
+		
+		function mouseout(d, selected) {
+		    var currentGroup = d3.select(selected.parentNode);
+		    if (currentGroup.select("rect")._groups[0][0].__data__.net_coming >= 0){
+		    	currentGroup.select("rect").style("fill", green);
+		    } else {
+		    	currentGroup.select("rect").style("fill", yellow);
+		    }
+		    currentGroup.select("#precise-value").style("font-weight", "normal");
+		    currentGroup.select("#precise-value").style("font-size", "12px");
+		    currentGroup.select("#precise-value").style("fill", "black");
+		    currentGroup.selectAll("text").style("font-weight", "normal");
+		    currentGroup.selectAll("text").style("fill", "black");
+		    
+		    var id = parseInt(selected.id.substring(3));
+		    var theCircle = d3.select("#\\3" + id + " ");
+		    if (id >= 10){
+		        theCircle = d3.select("#\\3" + Math.floor(id / 10) + " " + id % 10);
+		    }
+		    theCircle
+		      .attr("fill-opacity", "0.5")
+		      .style("cursor", "");
+		    d3.select("#tt")
+		      .style("visibility", "hidden");
+		}
+		
+		function mousemove(d, selected){
+		    var id = parseInt(selected.id.substring(3));
+		    var theCircle = d3.select("#\\3" + id + " ");
+		    if (id >= 10){
+		        theCircle = d3.select("#\\3" + Math.floor(id / 10) + " " + id % 10);
+		    }
+		    var homex = geopath.centroid(theCircle._groups[0][0].__data__)[0];
+		    var homey = geopath.centroid(theCircle._groups[0][0].__data__)[1];
+		    if (homex < 180){
+		        homex = 180;
+		    }
+		    if (homey < 135){
+		        homey = 135;
+		    }
+		    d3.select("#tt")
+		      .style("top", (homey - 135) + "px")
+		      .style("left", (homex - 180) + "px")
+		      .html("<div id='tipContainer'><div id='tipLocation'><b>" 
+		      + d.station + "</b></div><div id='tipKey'>Trip Out: <b>" 
+		      + d.going
+		      + "</b><br>Trips In: <b>" 
+		      + d.coming
+		      + "</b><br>Net Trips: <b>" 
+		      + (d.net_coming)
+		      + "</b></div><div class='tipClear'></div> </div>");
+		}
+		</script>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<meta charset="utf-8">
+
+	<head>
+		<title>San Francisco BikeShare Trips Weekly and Hourly Pattern 2016</title>
+		<link rel="stylesheet" href="../bootstrap/bootstrap.min.css">
+		<link rel="stylesheet" href="../main.css" />
+		<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cormorant+Garamond" />
+
+		<script src="../d3/d3.v3.min.js"></script>
+		<script src="../circular-heat-chart/circularHeatChart.js"></script>
+		<script src="../bootstrap/jquery.min.js"></script>
+		<script src="../bootstrap/bootstrap.min.js"></script>
+
+		<style type="text/css">
+			#tt { pointer-events: none;color:white;}
+			#tipContainer {  font-size:16px;position:absolute;width:180px;z-index:100;background-repeat:no-repeat;text-align:left;line-height:20px;}
+			#tipLocation {font-weight:normal;font-family:Georgia; font-style: Italic; color:white;margin:0px;padding:10px 10px;background:#333;font-size:14px;}
+			#tipCount {font-weight:bold;font-size:32px;letter-spacing:-1px;margin:0px;padding:0px 10px 10px 10px;color:#333;}
+			#tipKey {font-weight:normal;font-size:10px;color:#333;margin:0px;padding:5px 0px 5px 10px;background:rgba(218,218,218,0.5);}
+			#tt2 { pointer-events: none;color:white;}
+			#tipContainer2 {  font-size:16px;position:absolute;width:250px;z-index:100;background-repeat:no-repeat;text-align:left;line-height:20px;}
+			#tipLocation2 {font-weight:normal;font-family:Georgia; font-style: Italic; color:white;margin:0px;padding:10px 10px;background:#333;font-size:14px;}
+			#tipCount2 {font-weight:bold;font-size:32px;letter-spacing:-1px;margin:0px;padding:0px 10px 10px 10px;color:#333;}
+			#tipKey2 {font-weight:normal;font-size:10px;color:#333;margin:0px;padding:5px 0px 5px 10px;background:rgba(218,218,218,0.5);}
+			.tipClear { clear:both;}
+			#spiralgraph1 {position: relative; left: 50px;}
+			#spiralgraph2 {position: relative; left: 150px;}
+		</style>
+	</head>
+
+	<body>
+		<div class="container">
+        <div class="header">
+            <!-- <h1>Visualization of Bike Sharing Rides in Bay Area</h1> -->
+            <h1><b>San Francisco BikeShare Trips Weekly and Hourly Pattern</b></h1>
+            <div class="header_list">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="q1.html">Stations</a></li>
+                    <li><a href="q2.html">Time</a></li>
+                    <li><a href="q3.html">Weather</a></li>
+                    <li><a href="q4.html">Subscribers</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="description">
+            <p>This visualization shows the weekly and hourly pattern for bike trips in San Francisco. 
+			<p>The left spiral graph uses data from September 2015 to Augest 2016. 
+			The right spiral graph uses data in 50 days from September 2015. </p>
+			<p>Hover over spiral graphs to see detailed informationn for any slice.</p>
+        </div>
+
+        <div id="detail"></div>
+		<div class="row">
+		    <div class="col-md-5" id="spiralgraph1">
+		    </div>
+		    <div class="col-md-5" id="spiralgraph2"></div>
+		</div>
+		<script src="../bootstrap/jquery.min.js"></script>
+		<script src="../bootstrap/bootstrap.min.js"></script>
+		<script>
+			var blue = "#0070CD";
+			
+			var chart = circularHeatChart()
+			    .innerRadius(20)
+			    .range(["white", blue])
+			    .numSegments(7)
+			    .segmentHeight(5)
+			    .segmentLabels(["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "Monday"])
+			    .accessor(function(d) {return d.ridesNo;});
+			
+			var dates = ['09/01/15','09/02/15','09/03/15','09/04/15','09/05/15','09/06/15','09/07/15','09/08/15',
+			'09/09/15','09/10/15','09/11/15','09/12/15','09/13/15','09/14/15','09/15/15','09/16/15','09/17/15',
+			'09/18/15','09/19/15','09/20/15','09/21/15','09/22/15','09/23/15','09/24/15','09/25/15','09/26/15',
+			'09/27/15','09/28/15','09/29/15','09/30/15','10/01/15','10/02/15','10/03/15','10/04/15','10/05/15',
+			'10/06/15','10/07/15','10/08/15','10/09/15','10/10/15','10/11/15','10/12/15','10/13/15','10/14/15',
+			'10/15/15','10/16/15','10/17/15','10/18/15','10/19/15','10/20/15','10/21/15','10/22/15','10/23/15',
+			'10/24/15','10/25/15','10/26/15','10/27/15','10/28/15','10/29/15','10/30/15','10/31/15','11/01/15',
+			'11/02/15','11/03/15','11/04/15','11/05/15','11/06/15','11/07/15','11/08/15','11/09/15','11/10/15',
+			'11/11/15','11/12/15','11/13/15','11/14/15','11/15/15','11/16/15','11/17/15','11/18/15','11/19/15',
+			'11/20/15','11/21/15','11/22/15','11/23/15','11/24/15','11/25/15','11/26/15','11/27/15','11/28/15',
+			'11/29/15','11/30/15','12/01/15','12/02/15','12/03/15','12/04/15','12/05/15','12/06/15','12/07/15',
+			'12/08/15','12/09/15','12/10/15','12/11/15','12/12/15','12/13/15','12/14/15','12/15/15','12/16/15',
+			'12/17/15','12/18/15','12/19/15','12/20/15','12/21/15','12/22/15','12/23/15','12/24/15','12/25/15',
+			'12/26/15','12/27/15','12/28/15','12/29/15','12/30/15','12/31/15','01/01/16','01/02/16','01/03/16',
+			'01/04/16','01/05/16','01/06/16','01/07/16','01/08/16','01/09/16','01/10/16','01/11/16','01/12/16',
+			'01/13/16','01/14/16','01/15/16','01/16/16','01/17/16','01/18/16','01/19/16','01/20/16','01/21/16',
+			'01/22/16','01/23/16','01/24/16','01/25/16','01/26/16','01/27/16','01/28/16','01/29/16','01/30/16',
+			'01/31/16','02/01/16','02/02/16','02/03/16','02/04/16','02/05/16','02/06/16','02/07/16','02/08/16',
+			'02/09/16','02/10/16','02/11/16','02/12/16','02/13/16','02/14/16','02/15/16','02/16/16','02/17/16',
+			'02/18/16','02/19/16','02/20/16','02/21/16','02/22/16','02/23/16','02/24/16','02/25/16','02/26/16',
+			'02/27/16','02/28/16','02/29/16','03/01/16','03/02/16','03/03/16','03/04/16','03/05/16','03/06/16',
+			'03/07/16','03/08/16','03/09/16','03/10/16','03/11/16','03/12/16','03/13/16','03/14/16','03/15/16',
+			'03/16/16','03/17/16','03/18/16','03/19/16','03/20/16','03/21/16','03/22/16','03/23/16','03/24/16',
+			'03/25/16','03/26/16','03/27/16','03/28/16','03/29/16','03/30/16','03/31/16','04/01/16','04/02/16',
+			'04/03/16','04/04/16','04/05/16','04/06/16','04/07/16','04/08/16','04/09/16','04/10/16','04/11/16',
+			'04/12/16','04/13/16','04/14/16','04/15/16','04/16/16','04/17/16','04/18/16','04/19/16','04/20/16',
+			'04/21/16','04/22/16','04/23/16','04/24/16','04/25/16','04/26/16','04/27/16','04/28/16','04/29/16',
+			'04/30/16','05/01/16','05/02/16','05/03/16','05/04/16','05/05/16','05/06/16','05/07/16','05/08/16',
+			'05/09/16','05/10/16','05/11/16','05/12/16','05/13/16','05/14/16','05/15/16','05/16/16','05/17/16',
+			'05/18/16','05/19/16','05/20/16','05/21/16','05/22/16','05/23/16','05/24/16','05/25/16','05/26/16',
+			'05/27/16','05/28/16','05/29/16','05/30/16','05/31/16','06/01/16','06/02/16','06/03/16','06/04/16',
+			'06/05/16','06/06/16','06/07/16','06/08/16','06/09/16','06/10/16','06/11/16','06/12/16','06/13/16',
+			'06/14/16','06/15/16','06/16/16','06/17/16','06/18/16','06/19/16','06/20/16','06/21/16','06/22/16',
+			'06/23/16','06/24/16','06/25/16','06/26/16','06/27/16','06/28/16','06/29/16','06/30/16','07/01/16',
+			'07/02/16','07/03/16','07/04/16','07/05/16','07/06/16','07/07/16','07/08/16','07/09/16','07/10/16',
+			'07/11/16','07/12/16','07/13/16','07/14/16','07/15/16','07/16/16','07/17/16','07/18/16','07/19/16',
+			'07/20/16','07/21/16','07/22/16','07/23/16','07/24/16','07/25/16','07/26/16','07/27/16','07/28/16',
+			'07/29/16','07/30/16','07/31/16','08/01/16','08/02/16','08/03/16','08/04/16','08/05/16','08/06/16',
+			'08/07/16','08/08/16','08/09/16','08/10/16','08/11/16','08/12/16','08/13/16','08/14/16','08/15/16',
+			'08/16/16','08/17/16','08/18/16','08/19/16','08/20/16','08/21/16','08/22/16','08/23/16','08/24/16',
+			'08/25/16','08/26/16','08/27/16','08/28/16','08/29/16','08/30/16','08/31/16']
+			
+			//initialize html tooltip
+			var tooltip1 = d3.select("#spiralgraph1")
+		                .append("div")
+		                .attr("id", "tt")
+		                .style("z-index", "10")
+		                .style("position", "absolute")
+		                .style("visibility", "hidden");
+			
+			var rides = [1389,1313,1294,1129,386,318,318,1333,1405,1357,1165,360,301,1177,1423,1239,1312,1272,402,325,1343,1355,1230,1342,1280,364,349,1304,1408,1203,1253,1195,304,309,1287,1326,1326,1285,1196,393,483,1142,1397,1371,1283,1190,292,259,1292,1403,1328,1328,1204,345,295,1260,1270,1235,1310,1229,263,240,863,1246,1204,1266,1124,356,191,806,1260,1128,1238,1166,320,197,1220,1207,1253,1145,1172,277,244,1052,911,652,106,171,188,165,988,1117,1096,898,992,213,105,1027,1109,1028,898,893,228,77,999,1050,1066,990,801,245,51,341,539,563,124,106,128,146,475,502,319,264,98,154,135,765,632,562,978,909,132,133,1060,1090,1033,838,966,162,104,417,593,1107,1089,513,236,226,1127,1114,1131,1095,590,318,213,1013,865,1042,1062,948,410,270,1160,1144,1167,1176,1063,353,341,463,1155,973,1036,904,307,235,1187,1182,1163,1176,1034,337,242,1152,1256,1177,989,764,68,163,987,1122,955,691,520,176,50,1119,1206,1189,1114,1011,308,185,912,1144,1215,1210,952,365,222,1094,1161,1134,1099,967,299,259,1175,1220,1200,1231,986,111,197,1146,1181,1162,1106,1070,363,252,1179,1325,1325,1183,941,294,281,1167,1249,1162,1221,1090,270,243,1197,1242,1239,1219,925,183,225,1212,1307,1273,1497,1167,393,318,1209,1350,1222,1235,1103,309,295,1126,1226,1240,1201,988,380,300,266,1232,1171,1262,1145,353,258,1330,1283,1255,1264,1139,321,323,1313,1295,1249,1271,1111,337,282,1268,1333,1245,1253,1124,375,288,1282,1288,1185,1180,968,303,222,316,952,1091,1122,995,342,331,1168,1188,1210,1212,1046,271,196,1151,1155,1247,1196,1023,270,242,1200,1213,1219,1166,1102,356,311,1165,1241,1231,1140,967,300,275,1268,1233,1162,1166,1032,670,736,1204,1270,1253,1264,1074,313,291,1176,1241,1242,1184,1096,291,285,1196,1213,1176];
+			
+			var data = [];
+			for(var i=0; i<365; i++) data[i] = {date: dates[i], ridesNo: rides[i]};
+			
+			d3.select('#spiralgraph1')
+			    .selectAll('svg')
+			    .data([data])
+			    .enter()
+			    .append('svg')
+			    .attr("width", 600)
+			    .attr("height", 600)
+			    .call(chart);
+			    
+			d3.selectAll("#spiralgraph1 path")
+			    .on('mouseover', function(d){
+			    	return mouseover1(d, this);
+			    })
+			    .on('mousemove', function(d){
+			    	console.log(this);
+			    	var m = d3.mouse(this);
+	                mx = m[0];
+	                my = m[1];
+	                return mousemove1(mx, my, d);
+			    })
+			    .on('mouseout', function(d){
+			    	return mouseout1(d, this);
+			    });
+			        
+			function mouseover1(v, selected){
+	            // var d = d3.select(selected).data()[0];
+	            // d3.select("#detail")
+	            //   .text(d.date + ' has ' + d.ridesNo + ' rides in total.')
+	            //   .style("text-anchor", "middle");
+				return tooltip1.style("visibility", "visible");
+			}
+			
+			function mousemove1(mx, my, d){
+		    	return tooltip1.style("top", 0  + "px")
+		                  .style("left", 500 + "px")
+		                  .html("<div id='tipContainer'><div id='tipLocation'><b>Date: " 
+		                  + d.date + "</b></div><div id='tipKey'>Rides Number: <b>" 
+		                  + d.ridesNo
+		                  + "</b><br></div><div class='tipClear'></div> </div>");
+			}
+			
+			function mouseout1(v, selected){
+				return tooltip1.style("visibility", "hidden");
+			}
+			
+			// begin of chart 2
+			
+			var spiral2data = [
+			    {hour:0,ridesNo:3},{hour:1,ridesNo:3},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:5},{hour:6,ridesNo:36},{hour:7,ridesNo:118},{hour:8,ridesNo:228},{hour:9,ridesNo:152},{hour:10,ridesNo:49},{hour:11,ridesNo:44},{hour:12,ridesNo:50},{hour:13,ridesNo:36},{hour:14,ridesNo:47},{hour:15,ridesNo:52},{hour:16,ridesNo:117},{hour:17,ridesNo:191},{hour:18,ridesNo:124},{hour:19,ridesNo:64},{hour:20,ridesNo:33},{hour:21,ridesNo:15},{hour:22,ridesNo:12},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:4},{hour:5,ridesNo:7},{hour:6,ridesNo:26},{hour:7,ridesNo:109},{hour:8,ridesNo:231},{hour:9,ridesNo:141},{hour:10,ridesNo:37},{hour:11,ridesNo:37},{hour:12,ridesNo:47},{hour:13,ridesNo:56},{hour:14,ridesNo:30},{hour:15,ridesNo:55},{hour:16,ridesNo:132},{hour:17,ridesNo:171},{hour:18,ridesNo:96},{hour:19,ridesNo:65},{hour:20,ridesNo:27},{hour:21,ridesNo:20},{hour:22,ridesNo:15},{hour:23,ridesNo:3},
+			{hour:0,ridesNo:6},{hour:1,ridesNo:3},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:7},{hour:6,ridesNo:30},{hour:7,ridesNo:119},{hour:8,ridesNo:222},{hour:9,ridesNo:129},{hour:10,ridesNo:47},{hour:11,ridesNo:46},{hour:12,ridesNo:45},{hour:13,ridesNo:34},{hour:14,ridesNo:37},{hour:15,ridesNo:54},{hour:16,ridesNo:123},{hour:17,ridesNo:194},{hour:18,ridesNo:99},{hour:19,ridesNo:48},{hour:20,ridesNo:21},{hour:21,ridesNo:16},{hour:22,ridesNo:6},{hour:23,ridesNo:4},
+			{hour:0,ridesNo:4},{hour:1,ridesNo:1},{hour:2,ridesNo:1},{hour:3,ridesNo:0},{hour:4,ridesNo:2},{hour:5,ridesNo:4},{hour:6,ridesNo:24},{hour:7,ridesNo:88},{hour:8,ridesNo:182},{hour:9,ridesNo:117},{hour:10,ridesNo:40},{hour:11,ridesNo:40},{hour:12,ridesNo:44},{hour:13,ridesNo:56},{hour:14,ridesNo:44},{hour:15,ridesNo:81},{hour:16,ridesNo:119},{hour:17,ridesNo:124},{hour:18,ridesNo:89},{hour:19,ridesNo:32},{hour:20,ridesNo:14},{hour:21,ridesNo:11},{hour:22,ridesNo:6},{hour:23,ridesNo:6},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:3},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:0},{hour:5,ridesNo:0},{hour:6,ridesNo:2},{hour:7,ridesNo:3},{hour:8,ridesNo:9},{hour:9,ridesNo:19},{hour:10,ridesNo:28},{hour:11,ridesNo:25},{hour:12,ridesNo:30},{hour:13,ridesNo:36},{hour:14,ridesNo:46},{hour:15,ridesNo:19},{hour:16,ridesNo:32},{hour:17,ridesNo:39},{hour:18,ridesNo:24},{hour:19,ridesNo:21},{hour:20,ridesNo:18},{hour:21,ridesNo:4},{hour:22,ridesNo:10},{hour:23,ridesNo:15},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:3},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:0},{hour:5,ridesNo:1},{hour:6,ridesNo:1},{hour:7,ridesNo:4},{hour:8,ridesNo:7},{hour:9,ridesNo:13},{hour:10,ridesNo:19},{hour:11,ridesNo:34},{hour:12,ridesNo:26},{hour:13,ridesNo:38},{hour:14,ridesNo:29},{hour:15,ridesNo:31},{hour:16,ridesNo:27},{hour:17,ridesNo:25},{hour:18,ridesNo:16},{hour:19,ridesNo:10},{hour:20,ridesNo:6},{hour:21,ridesNo:9},{hour:22,ridesNo:12},{hour:23,ridesNo:2},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:2},{hour:2,ridesNo:0},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:1},{hour:6,ridesNo:1},{hour:7,ridesNo:7},{hour:8,ridesNo:19},{hour:9,ridesNo:17},{hour:10,ridesNo:23},{hour:11,ridesNo:18},{hour:12,ridesNo:33},{hour:13,ridesNo:28},{hour:14,ridesNo:23},{hour:15,ridesNo:30},{hour:16,ridesNo:13},{hour:17,ridesNo:33},{hour:18,ridesNo:22},{hour:19,ridesNo:19},{hour:20,ridesNo:9},{hour:21,ridesNo:5},{hour:22,ridesNo:8},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:1},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:7},{hour:6,ridesNo:34},{hour:7,ridesNo:140},{hour:8,ridesNo:213},{hour:9,ridesNo:136},{hour:10,ridesNo:46},{hour:11,ridesNo:36},{hour:12,ridesNo:35},{hour:13,ridesNo:29},{hour:14,ridesNo:26},{hour:15,ridesNo:43},{hour:16,ridesNo:127},{hour:17,ridesNo:192},{hour:18,ridesNo:138},{hour:19,ridesNo:57},{hour:20,ridesNo:39},{hour:21,ridesNo:15},{hour:22,ridesNo:9},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:4},{hour:1,ridesNo:2},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:8},{hour:6,ridesNo:36},{hour:7,ridesNo:122},{hour:8,ridesNo:235},{hour:9,ridesNo:146},{hour:10,ridesNo:46},{hour:11,ridesNo:47},{hour:12,ridesNo:46},{hour:13,ridesNo:42},{hour:14,ridesNo:35},{hour:15,ridesNo:58},{hour:16,ridesNo:125},{hour:17,ridesNo:181},{hour:18,ridesNo:129},{hour:19,ridesNo:58},{hour:20,ridesNo:39},{hour:21,ridesNo:16},{hour:22,ridesNo:18},{hour:23,ridesNo:8},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:0},{hour:2,ridesNo:1},{hour:3,ridesNo:3},{hour:4,ridesNo:1},{hour:5,ridesNo:6},{hour:6,ridesNo:28},{hour:7,ridesNo:119},{hour:8,ridesNo:209},{hour:9,ridesNo:155},{hour:10,ridesNo:47},{hour:11,ridesNo:50},{hour:12,ridesNo:49},{hour:13,ridesNo:39},{hour:14,ridesNo:38},{hour:15,ridesNo:51},{hour:16,ridesNo:135},{hour:17,ridesNo:203},{hour:18,ridesNo:116},{hour:19,ridesNo:47},{hour:20,ridesNo:22},{hour:21,ridesNo:22},{hour:22,ridesNo:11},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:4},{hour:2,ridesNo:3},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:5},{hour:6,ridesNo:27},{hour:7,ridesNo:93},{hour:8,ridesNo:189},{hour:9,ridesNo:124},{hour:10,ridesNo:43},{hour:11,ridesNo:46},{hour:12,ridesNo:47},{hour:13,ridesNo:38},{hour:14,ridesNo:36},{hour:15,ridesNo:61},{hour:16,ridesNo:126},{hour:17,ridesNo:146},{hour:18,ridesNo:93},{hour:19,ridesNo:32},{hour:20,ridesNo:15},{hour:21,ridesNo:11},{hour:22,ridesNo:6},{hour:23,ridesNo:14},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:2},{hour:2,ridesNo:1},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:2},{hour:6,ridesNo:2},{hour:7,ridesNo:4},{hour:8,ridesNo:12},{hour:9,ridesNo:25},{hour:10,ridesNo:33},{hour:11,ridesNo:32},{hour:12,ridesNo:28},{hour:13,ridesNo:32},{hour:14,ridesNo:28},{hour:15,ridesNo:33},{hour:16,ridesNo:40},{hour:17,ridesNo:24},{hour:18,ridesNo:24},{hour:19,ridesNo:10},{hour:20,ridesNo:4},{hour:21,ridesNo:14},{hour:22,ridesNo:3},{hour:23,ridesNo:4},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:1},{hour:2,ridesNo:3},{hour:3,ridesNo:0},{hour:4,ridesNo:2},{hour:5,ridesNo:1},{hour:6,ridesNo:0},{hour:7,ridesNo:5},{hour:8,ridesNo:12},{hour:9,ridesNo:17},{hour:10,ridesNo:19},{hour:11,ridesNo:23},{hour:12,ridesNo:25},{hour:13,ridesNo:23},{hour:14,ridesNo:28},{hour:15,ridesNo:34},{hour:16,ridesNo:31},{hour:17,ridesNo:26},{hour:18,ridesNo:19},{hour:19,ridesNo:10},{hour:20,ridesNo:7},{hour:21,ridesNo:10},{hour:22,ridesNo:4},{hour:23,ridesNo:0},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:5},{hour:6,ridesNo:41},{hour:7,ridesNo:116},{hour:8,ridesNo:191},{hour:9,ridesNo:123},{hour:10,ridesNo:37},{hour:11,ridesNo:26},{hour:12,ridesNo:36},{hour:13,ridesNo:31},{hour:14,ridesNo:31},{hour:15,ridesNo:43},{hour:16,ridesNo:105},{hour:17,ridesNo:190},{hour:18,ridesNo:116},{hour:19,ridesNo:45},{hour:20,ridesNo:19},{hour:21,ridesNo:11},{hour:22,ridesNo:7},{hour:23,ridesNo:2},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:7},{hour:6,ridesNo:31},{hour:7,ridesNo:129},{hour:8,ridesNo:190},{hour:9,ridesNo:150},{hour:10,ridesNo:61},{hour:11,ridesNo:50},{hour:12,ridesNo:52},{hour:13,ridesNo:41},{hour:14,ridesNo:42},{hour:15,ridesNo:57},{hour:16,ridesNo:124},{hour:17,ridesNo:191},{hour:18,ridesNo:164},{hour:19,ridesNo:54},{hour:20,ridesNo:38},{hour:21,ridesNo:18},{hour:22,ridesNo:15},{hour:23,ridesNo:6},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:1},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:7},{hour:6,ridesNo:31},{hour:7,ridesNo:112},{hour:8,ridesNo:203},{hour:9,ridesNo:144},{hour:10,ridesNo:45},{hour:11,ridesNo:38},{hour:12,ridesNo:42},{hour:13,ridesNo:35},{hour:14,ridesNo:29},{hour:15,ridesNo:53},{hour:16,ridesNo:115},{hour:17,ridesNo:166},{hour:18,ridesNo:106},{hour:19,ridesNo:43},{hour:20,ridesNo:29},{hour:21,ridesNo:14},{hour:22,ridesNo:14},{hour:23,ridesNo:6},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:1},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:5},{hour:6,ridesNo:27},{hour:7,ridesNo:104},{hour:8,ridesNo:182},{hour:9,ridesNo:156},{hour:10,ridesNo:45},{hour:11,ridesNo:52},{hour:12,ridesNo:45},{hour:13,ridesNo:35},{hour:14,ridesNo:50},{hour:15,ridesNo:48},{hour:16,ridesNo:117},{hour:17,ridesNo:194},{hour:18,ridesNo:122},{hour:19,ridesNo:50},{hour:20,ridesNo:27},{hour:21,ridesNo:22},{hour:22,ridesNo:12},{hour:23,ridesNo:12},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:8},{hour:6,ridesNo:32},{hour:7,ridesNo:74},{hour:8,ridesNo:188},{hour:9,ridesNo:141},{hour:10,ridesNo:59},{hour:11,ridesNo:47},{hour:12,ridesNo:47},{hour:13,ridesNo:67},{hour:14,ridesNo:56},{hour:15,ridesNo:62},{hour:16,ridesNo:133},{hour:17,ridesNo:156},{hour:18,ridesNo:97},{hour:19,ridesNo:48},{hour:20,ridesNo:23},{hour:21,ridesNo:15},{hour:22,ridesNo:10},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:2},{hour:6,ridesNo:4},{hour:7,ridesNo:5},{hour:8,ridesNo:9},{hour:9,ridesNo:21},{hour:10,ridesNo:45},{hour:11,ridesNo:32},{hour:12,ridesNo:45},{hour:13,ridesNo:27},{hour:14,ridesNo:29},{hour:15,ridesNo:20},{hour:16,ridesNo:34},{hour:17,ridesNo:37},{hour:18,ridesNo:30},{hour:19,ridesNo:18},{hour:20,ridesNo:9},{hour:21,ridesNo:10},{hour:22,ridesNo:14},{hour:23,ridesNo:10},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:1},{hour:2,ridesNo:0},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:3},{hour:6,ridesNo:2},{hour:7,ridesNo:5},{hour:8,ridesNo:13},{hour:9,ridesNo:19},{hour:10,ridesNo:24},{hour:11,ridesNo:24},{hour:12,ridesNo:33},{hour:13,ridesNo:26},{hour:14,ridesNo:36},{hour:15,ridesNo:25},{hour:16,ridesNo:36},{hour:17,ridesNo:27},{hour:18,ridesNo:11},{hour:19,ridesNo:12},{hour:20,ridesNo:4},{hour:21,ridesNo:8},{hour:22,ridesNo:12},{hour:23,ridesNo:4},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:1},{hour:2,ridesNo:2},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:6},{hour:6,ridesNo:34},{hour:7,ridesNo:106},{hour:8,ridesNo:220},{hour:9,ridesNo:153},{hour:10,ridesNo:54},{hour:11,ridesNo:37},{hour:12,ridesNo:42},{hour:13,ridesNo:45},{hour:14,ridesNo:28},{hour:15,ridesNo:54},{hour:16,ridesNo:109},{hour:17,ridesNo:221},{hour:18,ridesNo:115},{hour:19,ridesNo:71},{hour:20,ridesNo:24},{hour:21,ridesNo:8},{hour:22,ridesNo:8},{hour:23,ridesNo:0},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:2},{hour:2,ridesNo:0},{hour:3,ridesNo:3},{hour:4,ridesNo:2},{hour:5,ridesNo:10},{hour:6,ridesNo:39},{hour:7,ridesNo:111},{hour:8,ridesNo:231},{hour:9,ridesNo:156},{hour:10,ridesNo:25},{hour:11,ridesNo:38},{hour:12,ridesNo:57},{hour:13,ridesNo:34},{hour:14,ridesNo:31},{hour:15,ridesNo:50},{hour:16,ridesNo:130},{hour:17,ridesNo:186},{hour:18,ridesNo:128},{hour:19,ridesNo:51},{hour:20,ridesNo:34},{hour:21,ridesNo:22},{hour:22,ridesNo:10},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:0},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:6},{hour:6,ridesNo:37},{hour:7,ridesNo:95},{hour:8,ridesNo:213},{hour:9,ridesNo:115},{hour:10,ridesNo:46},{hour:11,ridesNo:47},{hour:12,ridesNo:52},{hour:13,ridesNo:36},{hour:14,ridesNo:27},{hour:15,ridesNo:44},{hour:16,ridesNo:101},{hour:17,ridesNo:183},{hour:18,ridesNo:115},{hour:19,ridesNo:45},{hour:20,ridesNo:31},{hour:21,ridesNo:16},{hour:22,ridesNo:11},{hour:23,ridesNo:6},
+			{hour:0,ridesNo:4},{hour:1,ridesNo:3},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:7},{hour:5,ridesNo:8},{hour:6,ridesNo:38},{hour:7,ridesNo:95},{hour:8,ridesNo:227},{hour:9,ridesNo:131},{hour:10,ridesNo:53},{hour:11,ridesNo:42},{hour:12,ridesNo:51},{hour:13,ridesNo:41},{hour:14,ridesNo:39},{hour:15,ridesNo:56},{hour:16,ridesNo:115},{hour:17,ridesNo:152},{hour:18,ridesNo:135},{hour:19,ridesNo:63},{hour:20,ridesNo:35},{hour:21,ridesNo:19},{hour:22,ridesNo:13},{hour:23,ridesNo:13},
+			{hour:0,ridesNo:5},{hour:1,ridesNo:1},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:2},{hour:6,ridesNo:25},{hour:7,ridesNo:95},{hour:8,ridesNo:182},{hour:9,ridesNo:125},{hour:10,ridesNo:60},{hour:11,ridesNo:53},{hour:12,ridesNo:59},{hour:13,ridesNo:49},{hour:14,ridesNo:46},{hour:15,ridesNo:69},{hour:16,ridesNo:124},{hour:17,ridesNo:166},{hour:18,ridesNo:113},{hour:19,ridesNo:35},{hour:20,ridesNo:27},{hour:21,ridesNo:18},{hour:22,ridesNo:11},{hour:23,ridesNo:10},
+			{hour:0,ridesNo:4},{hour:1,ridesNo:3},{hour:2,ridesNo:2},{hour:3,ridesNo:1},{hour:4,ridesNo:0},{hour:5,ridesNo:0},{hour:6,ridesNo:4},{hour:7,ridesNo:10},{hour:8,ridesNo:19},{hour:9,ridesNo:18},{hour:10,ridesNo:25},{hour:11,ridesNo:29},{hour:12,ridesNo:34},{hour:13,ridesNo:38},{hour:14,ridesNo:31},{hour:15,ridesNo:29},{hour:16,ridesNo:42},{hour:17,ridesNo:25},{hour:18,ridesNo:19},{hour:19,ridesNo:7},{hour:20,ridesNo:6},{hour:21,ridesNo:11},{hour:22,ridesNo:4},{hour:23,ridesNo:3},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:6},{hour:2,ridesNo:2},{hour:3,ridesNo:0},{hour:4,ridesNo:1},{hour:5,ridesNo:3},{hour:6,ridesNo:6},{hour:7,ridesNo:4},{hour:8,ridesNo:16},{hour:9,ridesNo:20},{hour:10,ridesNo:34},{hour:11,ridesNo:34},{hour:12,ridesNo:23},{hour:13,ridesNo:27},{hour:14,ridesNo:25},{hour:15,ridesNo:38},{hour:16,ridesNo:18},{hour:17,ridesNo:25},{hour:18,ridesNo:20},{hour:19,ridesNo:17},{hour:20,ridesNo:17},{hour:21,ridesNo:8},{hour:22,ridesNo:4},{hour:23,ridesNo:1},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:4},{hour:6,ridesNo:35},{hour:7,ridesNo:106},{hour:8,ridesNo:207},{hour:9,ridesNo:142},{hour:10,ridesNo:45},{hour:11,ridesNo:35},{hour:12,ridesNo:63},{hour:13,ridesNo:42},{hour:14,ridesNo:43},{hour:15,ridesNo:54},{hour:16,ridesNo:119},{hour:17,ridesNo:193},{hour:18,ridesNo:119},{hour:19,ridesNo:53},{hour:20,ridesNo:20},{hour:21,ridesNo:11},{hour:22,ridesNo:4},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:8},{hour:6,ridesNo:38},{hour:7,ridesNo:123},{hour:8,ridesNo:199},{hour:9,ridesNo:152},{hour:10,ridesNo:48},{hour:11,ridesNo:40},{hour:12,ridesNo:57},{hour:13,ridesNo:39},{hour:14,ridesNo:23},{hour:15,ridesNo:63},{hour:16,ridesNo:137},{hour:17,ridesNo:217},{hour:18,ridesNo:147},{hour:19,ridesNo:48},{hour:20,ridesNo:22},{hour:21,ridesNo:23},{hour:22,ridesNo:19},{hour:23,ridesNo:1},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:2},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:9},{hour:6,ridesNo:38},{hour:7,ridesNo:116},{hour:8,ridesNo:217},{hour:9,ridesNo:128},{hour:10,ridesNo:31},{hour:11,ridesNo:27},{hour:12,ridesNo:24},{hour:13,ridesNo:14},{hour:14,ridesNo:23},{hour:15,ridesNo:55},{hour:16,ridesNo:115},{hour:17,ridesNo:183},{hour:18,ridesNo:112},{hour:19,ridesNo:42},{hour:20,ridesNo:28},{hour:21,ridesNo:15},{hour:22,ridesNo:14},{hour:23,ridesNo:8},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:2},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:8},{hour:6,ridesNo:28},{hour:7,ridesNo:98},{hour:8,ridesNo:174},{hour:9,ridesNo:153},{hour:10,ridesNo:42},{hour:11,ridesNo:47},{hour:12,ridesNo:48},{hour:13,ridesNo:37},{hour:14,ridesNo:38},{hour:15,ridesNo:67},{hour:16,ridesNo:112},{hour:17,ridesNo:170},{hour:18,ridesNo:109},{hour:19,ridesNo:51},{hour:20,ridesNo:26},{hour:21,ridesNo:23},{hour:22,ridesNo:7},{hour:23,ridesNo:6},
+			{hour:0,ridesNo:6},{hour:1,ridesNo:1},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:7},{hour:6,ridesNo:30},{hour:7,ridesNo:75},{hour:8,ridesNo:160},{hour:9,ridesNo:157},{hour:10,ridesNo:47},{hour:11,ridesNo:45},{hour:12,ridesNo:54},{hour:13,ridesNo:51},{hour:14,ridesNo:41},{hour:15,ridesNo:54},{hour:16,ridesNo:106},{hour:17,ridesNo:170},{hour:18,ridesNo:112},{hour:19,ridesNo:31},{hour:20,ridesNo:16},{hour:21,ridesNo:8},{hour:22,ridesNo:12},{hour:23,ridesNo:9},
+			{hour:0,ridesNo:14},{hour:1,ridesNo:3},{hour:2,ridesNo:0},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:1},{hour:6,ridesNo:3},{hour:7,ridesNo:12},{hour:8,ridesNo:17},{hour:9,ridesNo:28},{hour:10,ridesNo:26},{hour:11,ridesNo:33},{hour:12,ridesNo:26},{hour:13,ridesNo:24},{hour:14,ridesNo:24},{hour:15,ridesNo:27},{hour:16,ridesNo:17},{hour:17,ridesNo:16},{hour:18,ridesNo:10},{hour:19,ridesNo:5},{hour:20,ridesNo:6},{hour:21,ridesNo:4},{hour:22,ridesNo:6},{hour:23,ridesNo:2},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:4},{hour:2,ridesNo:2},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:1},{hour:6,ridesNo:8},{hour:7,ridesNo:4},{hour:8,ridesNo:12},{hour:9,ridesNo:17},{hour:10,ridesNo:16},{hour:11,ridesNo:34},{hour:12,ridesNo:28},{hour:13,ridesNo:39},{hour:14,ridesNo:29},{hour:15,ridesNo:30},{hour:16,ridesNo:23},{hour:17,ridesNo:14},{hour:18,ridesNo:16},{hour:19,ridesNo:8},{hour:20,ridesNo:11},{hour:21,ridesNo:7},{hour:22,ridesNo:2},{hour:23,ridesNo:2},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:1},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:7},{hour:6,ridesNo:35},{hour:7,ridesNo:100},{hour:8,ridesNo:214},{hour:9,ridesNo:138},{hour:10,ridesNo:48},{hour:11,ridesNo:41},{hour:12,ridesNo:37},{hour:13,ridesNo:35},{hour:14,ridesNo:30},{hour:15,ridesNo:45},{hour:16,ridesNo:128},{hour:17,ridesNo:205},{hour:18,ridesNo:137},{hour:19,ridesNo:40},{hour:20,ridesNo:22},{hour:21,ridesNo:9},{hour:22,ridesNo:9},{hour:23,ridesNo:3},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:8},{hour:6,ridesNo:30},{hour:7,ridesNo:115},{hour:8,ridesNo:199},{hour:9,ridesNo:140},{hour:10,ridesNo:54},{hour:11,ridesNo:32},{hour:12,ridesNo:54},{hour:13,ridesNo:44},{hour:14,ridesNo:34},{hour:15,ridesNo:54},{hour:16,ridesNo:137},{hour:17,ridesNo:183},{hour:18,ridesNo:141},{hour:19,ridesNo:38},{hour:20,ridesNo:27},{hour:21,ridesNo:19},{hour:22,ridesNo:10},{hour:23,ridesNo:4},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:0},{hour:2,ridesNo:2},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:4},{hour:6,ridesNo:35},{hour:7,ridesNo:115},{hour:8,ridesNo:209},{hour:9,ridesNo:115},{hour:10,ridesNo:56},{hour:11,ridesNo:41},{hour:12,ridesNo:60},{hour:13,ridesNo:48},{hour:14,ridesNo:23},{hour:15,ridesNo:44},{hour:16,ridesNo:134},{hour:17,ridesNo:197},{hour:18,ridesNo:124},{hour:19,ridesNo:50},{hour:20,ridesNo:29},{hour:21,ridesNo:15},{hour:22,ridesNo:13},{hour:23,ridesNo:9},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:3},{hour:5,ridesNo:5},{hour:6,ridesNo:27},{hour:7,ridesNo:109},{hour:8,ridesNo:208},{hour:9,ridesNo:142},{hour:10,ridesNo:54},{hour:11,ridesNo:52},{hour:12,ridesNo:37},{hour:13,ridesNo:41},{hour:14,ridesNo:32},{hour:15,ridesNo:50},{hour:16,ridesNo:126},{hour:17,ridesNo:168},{hour:18,ridesNo:118},{hour:19,ridesNo:52},{hour:20,ridesNo:27},{hour:21,ridesNo:15},{hour:22,ridesNo:10},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:18},{hour:1,ridesNo:2},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:7},{hour:6,ridesNo:24},{hour:7,ridesNo:96},{hour:8,ridesNo:182},{hour:9,ridesNo:121},{hour:10,ridesNo:48},{hour:11,ridesNo:44},{hour:12,ridesNo:45},{hour:13,ridesNo:51},{hour:14,ridesNo:43},{hour:15,ridesNo:56},{hour:16,ridesNo:122},{hour:17,ridesNo:162},{hour:18,ridesNo:79},{hour:19,ridesNo:34},{hour:20,ridesNo:20},{hour:21,ridesNo:16},{hour:22,ridesNo:12},{hour:23,ridesNo:12},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:2},{hour:2,ridesNo:1},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:1},{hour:6,ridesNo:2},{hour:7,ridesNo:6},{hour:8,ridesNo:14},{hour:9,ridesNo:14},{hour:10,ridesNo:21},{hour:11,ridesNo:39},{hour:12,ridesNo:49},{hour:13,ridesNo:44},{hour:14,ridesNo:35},{hour:15,ridesNo:40},{hour:16,ridesNo:31},{hour:17,ridesNo:16},{hour:18,ridesNo:33},{hour:19,ridesNo:12},{hour:20,ridesNo:4},{hour:21,ridesNo:9},{hour:22,ridesNo:6},{hour:23,ridesNo:11},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:2},{hour:2,ridesNo:3},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:2},{hour:6,ridesNo:1},{hour:7,ridesNo:11},{hour:8,ridesNo:17},{hour:9,ridesNo:45},{hour:10,ridesNo:28},{hour:11,ridesNo:41},{hour:12,ridesNo:43},{hour:13,ridesNo:62},{hour:14,ridesNo:51},{hour:15,ridesNo:40},{hour:16,ridesNo:35},{hour:17,ridesNo:27},{hour:18,ridesNo:26},{hour:19,ridesNo:7},{hour:20,ridesNo:18},{hour:21,ridesNo:8},{hour:22,ridesNo:9},{hour:23,ridesNo:5},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:1},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:0},{hour:5,ridesNo:6},{hour:6,ridesNo:31},{hour:7,ridesNo:93},{hour:8,ridesNo:186},{hour:9,ridesNo:103},{hour:10,ridesNo:59},{hour:11,ridesNo:39},{hour:12,ridesNo:31},{hour:13,ridesNo:33},{hour:14,ridesNo:23},{hour:15,ridesNo:49},{hour:16,ridesNo:109},{hour:17,ridesNo:182},{hour:18,ridesNo:100},{hour:19,ridesNo:40},{hour:20,ridesNo:34},{hour:21,ridesNo:11},{hour:22,ridesNo:7},{hour:23,ridesNo:2},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:3},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:5},{hour:5,ridesNo:7},{hour:6,ridesNo:37},{hour:7,ridesNo:113},{hour:8,ridesNo:232},{hour:9,ridesNo:147},{hour:10,ridesNo:53},{hour:11,ridesNo:46},{hour:12,ridesNo:42},{hour:13,ridesNo:38},{hour:14,ridesNo:38},{hour:15,ridesNo:63},{hour:16,ridesNo:137},{hour:17,ridesNo:170},{hour:18,ridesNo:137},{hour:19,ridesNo:56},{hour:20,ridesNo:30},{hour:21,ridesNo:15},{hour:22,ridesNo:15},{hour:23,ridesNo:8},
+			{hour:0,ridesNo:3},{hour:1,ridesNo:2},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:1},{hour:5,ridesNo:6},{hour:6,ridesNo:33},{hour:7,ridesNo:117},{hour:8,ridesNo:219},{hour:9,ridesNo:163},{hour:10,ridesNo:56},{hour:11,ridesNo:36},{hour:12,ridesNo:52},{hour:13,ridesNo:41},{hour:14,ridesNo:32},{hour:15,ridesNo:47},{hour:16,ridesNo:119},{hour:17,ridesNo:195},{hour:18,ridesNo:120},{hour:19,ridesNo:58},{hour:20,ridesNo:28},{hour:21,ridesNo:21},{hour:22,ridesNo:12},{hour:23,ridesNo:8},
+			{hour:0,ridesNo:4},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:1},{hour:4,ridesNo:0},{hour:5,ridesNo:7},{hour:6,ridesNo:30},{hour:7,ridesNo:106},{hour:8,ridesNo:233},{hour:9,ridesNo:125},{hour:10,ridesNo:43},{hour:11,ridesNo:50},{hour:12,ridesNo:41},{hour:13,ridesNo:40},{hour:14,ridesNo:32},{hour:15,ridesNo:54},{hour:16,ridesNo:126},{hour:17,ridesNo:181},{hour:18,ridesNo:91},{hour:19,ridesNo:49},{hour:20,ridesNo:33},{hour:21,ridesNo:18},{hour:22,ridesNo:9},{hour:23,ridesNo:10},
+			{hour:0,ridesNo:6},{hour:1,ridesNo:2},{hour:2,ridesNo:0},{hour:3,ridesNo:0},{hour:4,ridesNo:2},{hour:5,ridesNo:7},{hour:6,ridesNo:25},{hour:7,ridesNo:94},{hour:8,ridesNo:181},{hour:9,ridesNo:120},{hour:10,ridesNo:48},{hour:11,ridesNo:48},{hour:12,ridesNo:41},{hour:13,ridesNo:43},{hour:14,ridesNo:56},{hour:15,ridesNo:45},{hour:16,ridesNo:131},{hour:17,ridesNo:153},{hour:18,ridesNo:91},{hour:19,ridesNo:39},{hour:20,ridesNo:25},{hour:21,ridesNo:8},{hour:22,ridesNo:14},{hour:23,ridesNo:11},
+			{hour:0,ridesNo:1},{hour:1,ridesNo:4},{hour:2,ridesNo:2},{hour:3,ridesNo:0},{hour:4,ridesNo:0},{hour:5,ridesNo:0},{hour:6,ridesNo:4},{hour:7,ridesNo:12},{hour:8,ridesNo:14},{hour:9,ridesNo:15},{hour:10,ridesNo:29},{hour:11,ridesNo:27},{hour:12,ridesNo:30},{hour:13,ridesNo:27},{hour:14,ridesNo:23},{hour:15,ridesNo:16},{hour:16,ridesNo:19},{hour:17,ridesNo:19},{hour:18,ridesNo:6},{hour:19,ridesNo:11},{hour:20,ridesNo:6},{hour:21,ridesNo:8},{hour:22,ridesNo:12},{hour:23,ridesNo:7},
+			{hour:0,ridesNo:7},{hour:1,ridesNo:5},{hour:2,ridesNo:5},{hour:3,ridesNo:1},{hour:4,ridesNo:0},{hour:5,ridesNo:3},{hour:6,ridesNo:11},{hour:7,ridesNo:8},{hour:8,ridesNo:10},{hour:9,ridesNo:9},{hour:10,ridesNo:24},{hour:11,ridesNo:25},{hour:12,ridesNo:16},{hour:13,ridesNo:17},{hour:14,ridesNo:20},{hour:15,ridesNo:18},{hour:16,ridesNo:25},{hour:17,ridesNo:16},{hour:18,ridesNo:13},{hour:19,ridesNo:9},{hour:20,ridesNo:5},{hour:21,ridesNo:6},{hour:22,ridesNo:4},{hour:23,ridesNo:2},
+			{hour:0,ridesNo:0},{hour:1,ridesNo:0},{hour:2,ridesNo:0},{hour:3,ridesNo:2},{hour:4,ridesNo:3},{hour:5,ridesNo:4},{hour:6,ridesNo:39},{hour:7,ridesNo:92},{hour:8,ridesNo:179},{hour:9,ridesNo:138},{hour:10,ridesNo:57},{hour:11,ridesNo:39},{hour:12,ridesNo:44},{hour:13,ridesNo:39},{hour:14,ridesNo:35},{hour:15,ridesNo:52},{hour:16,ridesNo:130},{hour:17,ridesNo:211},{hour:18,ridesNo:128},{hour:19,ridesNo:53},{hour:20,ridesNo:21},{hour:21,ridesNo:13},{hour:22,ridesNo:5},{hour:23,ridesNo:8},
+			{hour:0,ridesNo:2},{hour:1,ridesNo:1},{hour:2,ridesNo:1},{hour:3,ridesNo:1},{hour:4,ridesNo:2},{hour:5,ridesNo:7},{hour:6,ridesNo:33},{hour:7,ridesNo:120},{hour:8,ridesNo:215},{hour:9,ridesNo:167},{hour:10,ridesNo:47},{hour:11,ridesNo:46},{hour:12,ridesNo:60},{hour:13,ridesNo:49},{hour:14,ridesNo:28},{hour:15,ridesNo:61},{hour:16,ridesNo:121},{hour:17,ridesNo:201},{hour:18,ridesNo:115},{hour:19,ridesNo:62},{hour:20,ridesNo:25},{hour:21,ridesNo:21},{hour:22,ridesNo:11},{hour:23,ridesNo:7}
+			    ];
+			    
+			var chart2 = circularHeatChart()
+			    .innerRadius(20)
+			    .numSegments(24)
+			    .range(["white", blue])
+			    .segmentHeight(5)
+			    .segmentLabels(["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23"])
+			    .accessor(function(d) {return d.ridesNo;});
+			    
+					
+			var tooltip2 = d3.select("#spiralgraph2")
+		                .append("div")
+		                .attr("id", "tt2")
+		                .style("z-index", "10")
+		                .style("position", "absolute")
+		                .style("visibility", "hidden");
+			
+			d3.select('#spiralgraph2')
+			    .selectAll('svg')
+			    .data([spiral2data])
+			    .enter()
+			    .append('svg')
+			    .attr("width", 600)
+			    .attr("height", 600)
+			    .call(chart2);
+			    
+			d3.selectAll("#spiralgraph2 path")
+			    .on('mouseover', function(d){
+			    	return mouseover2(d, this);
+			    })
+			    .on('mousemove', function(d){
+			    	console.log(this);
+			    	var m = d3.mouse(this);
+	                mx = m[0];
+	                my = m[1];
+	                return mousemove2(mx, my, d);
+			    })
+			    .on('mouseout', function(d){
+			    	return mouseout2(d, this);
+			    });;
+			        
+			function mouseover2(v, selected){
+	            // var d = d3.select(selected).data()[0];
+	            // d3.select("#detail")
+	            // 	.text('Hour '+ d.hour + ' has ' + d.ridesNo + ' rides.');
+				return tooltip2.style("visibility", "visible");
+			}
+			
+			function mousemove2(mx, my, d){
+				return tooltip2.style("top", 0  + "px")
+		                  .style("left", -70 + "px")
+		                  .html("<div id='tipContainer'><div id='tipLocation'><b>Hour: " 
+		                  + d.hour + "</b></div><div id='tipKey'>Rides Number: <b>" 
+		                  + d.ridesNo
+		                  + "</b><br></div><div class='tipClear'></div> </div>");
+			}
+			
+			function mouseout2(v, selected){
+				return tooltip2.style("visibility", "hidden");
+			}
+		</script>
+		
+		</div>
+	</body>
+</html>

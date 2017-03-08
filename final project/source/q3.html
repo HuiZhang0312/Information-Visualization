@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<meta charset="utf-8">
+	<head>
+		<title>San Francisco BikeShare Trips and Weather 2016</title>
+		<link rel="stylesheet" href="../main.css" />
+		<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Cormorant+Garamond" />
+
+		<script src="../d3/d3.js"></script>
+
+		<style type="text/css">
+			body { font: 12px Arial;}
+			path { stroke: steelblue;stroke-width: 1.5;fill: none;}
+			.axis path,
+			.axis line {fill: none;stroke: grey;stroke-width: 1;shape-rendering: crispEdges;}
+			.legend {font-size: 16px;         font-weight: bold;         text-anchor: start;}
+			.weatherTrip {position: relative; left: 250px;}
+			.description{height: 100px;}
+		</style>
+		
+	</head>
+	<body>
+		<div class="container">
+        <div class="header">
+            <!-- <h1>Visualization of Bike Sharing Rides in Bay Area</h1> -->
+            <h1>San Francisco BikeShare Trips and Weather</h1>
+            <div class="header_list">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="q1.html">Stations</a></li>
+                    <li><a href="q2.html">Time</a></li>
+                    <li><a href="q3.html">Weather</a></li>
+                    <li><a href="q4.html">Subscribers</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="description">
+            <p>This visualization shows weather and trips value in San Francisco from September 2015 to Augest 2016.</p>
+            <p>Left y axis is the scale of weather. Right y axis is the scale of trips</p>
+            <p>Click the categories text at right side to show and hide.</p>
+        </div>
+
+		<svg class="weatherTrip" width="1100" height="500"></svg>
+		<script>
+		var colorForTrips = "#0070CD";
+		var colorForTemp = "#FF7F0E";
+		var colorForWind = "#2CA02C";
+		var colorForVis = "#ed3902";
+		
+		var svg = d3.select("svg"),
+		    margin = {top: 20, right: 250, bottom: 50, left: 50},
+		    width = svg.attr("width") - margin.left - margin.right,
+		    height = svg.attr("height") - margin.top - margin.bottom,
+		    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		
+		
+		
+		var	parseDate = d3.timeParse("%m/%d/%Y");
+		
+		
+		var	x = d3.scaleTime().range([0, width]);
+		var	y0 = d3.scaleLinear().range([height, 0]);
+		var	y1 = d3.scaleLinear().range([height, 0]);	
+				
+		
+		var	valueline = d3.line()
+		    .curve(d3.curveBasis)
+			.x(function(d) { return x(d.date); })
+			.y(function(d) { return y1(d.Trips); });	
+		    
+		var	valueline2 = d3.line()
+		    .curve(d3.curveBasis)
+			.x(function(d) { return x(d.date); })
+			.y(function(d) { return y0(d.Temperature); });
+		
+		var	valueline3 = d3.line()
+		    .curve(d3.curveBasis)
+			.x(function(d) { return x(d.date); })
+			.y(function(d) { return y0(d.WindSpeed); });
+		
+		var	valueline4 = d3.line()
+		    .curve(d3.curveBasis)
+			.x(function(d) { return x(d.date); })
+			.y(function(d) { return y0(d.Visibility); });
+		
+		// Legend
+		// var color = d3.scaleOrdinal()
+		//   .domain(["Trips","Temperature","WindSpeed","Visibility"])
+		//   .range([ "#9467bd","#1f77b4","#2CA02C","#FF7F0E"]);
+		
+		// svg.append("g")
+		//   .attr("class", "legendOrdinal")
+		//   .attr("transform", "translate(950,10)");
+		
+		// var legendOrdinal = d3.legendColor()
+		//   .shape("path", d3.symbol().type(d3.symbolCircle).size(150)())
+		//   .shapePadding(10)
+		//   .scale(color);
+		
+		// svg.select(".legendOrdinal")
+		//   .call(legendOrdinal);
+		// Legend end
+		
+		
+		// Get the data
+		
+		d3.csv("data/weather and trips.csv", function(error, data) {
+			if (error) throw error;
+			data.forEach(function(d) {
+			d.date = parseDate(d.date);
+			d.Trips = +d.Trips;
+			d.Temperature = +d.Temperature;
+			d.WindSpeed = +d.WindSpeed;
+			d.Visibility = +d.Visibility;
+		});
+		
+		// Scale the range of the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		y0.domain([0, d3.max(data, function(d) { 
+			return Math.max(d.Temperature); })]);
+		y1.domain([0, d3.max(data, function(d) { 
+			return Math.max(d.Trips); })]);
+		
+		// x axis
+		g.append("g")
+			.attr("class", "axis axis--x")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+		    .append("text")
+		        .style("text-anchor", "middle")
+		        .attr("transform", "translate(400,35)")
+		        .attr("fill", "#000")
+		        .style("font-size", "15px")
+		        .text("Date");
+		
+		// y0 axis
+		  g.append("g")
+		    .attr("class", "axis axis--y")
+		    .call(d3.axisLeft(y0))
+		      .append("text")
+		      .style("text-anchor", "middle")
+		      //.attr("transform", "translate(0,0)")
+		      .attr("transform", "translate(-30,200) rotate(-90)")
+		      //.attr("y", 6)
+		      //.attr("dy", "0.71em")
+		      .style("font-size", "15px")
+		      .attr("fill", "#000")
+		      .text("Weather");
+		
+		// y1 axis
+		  g.append("g")
+		      .attr("class", "axis axis--y")
+		      .attr("transform", "translate(" + width + " ,0)")
+		      .call(d3.axisRight(y1))
+		      .append("text")
+		      .style("text-anchor", "middle")
+		      .attr("transform", "translate(40,200) rotate(-90)")
+		      //.attr("transform", "rotate(-90)")
+		      //.attr("y", 6)
+		      //.attr("dy", "0.71em")
+		      .style("font-size", "15px")
+		      .attr("fill", "#000")
+		      .text("Trips");
+		
+		
+		
+		g.append("path")
+			.attr("class", "line")
+			.style("stroke", colorForTrips)
+			.attr("id", "lineTrips")
+			.attr("d", valueline(data));
+		
+		g.append("path")
+			.attr("class", "line")
+			.style("stroke", colorForTemp)
+			.attr("id", "lineTemperature")
+			.attr("d", valueline2(data));
+		
+		g.append("path")
+			.attr("class", "line")
+			.style("stroke", colorForWind)
+			.attr("id", "lineWindSpeed")
+			.attr("d", valueline3(data));
+		
+		g.append("path")
+			.attr("class", "line")
+			.style("stroke", colorForVis)
+			.attr("id", "lineVisibility")
+			.attr("d", valueline4(data));
+		
+		// Add title
+		// g.append("text")
+		//     .attr("x", width / 2 )
+		//     .attr("y", 0)
+		//     .style("text-anchor", "middle")
+		//     .style("font-size", "20px")
+		//     .style("text-decoration", "bold") 
+		//     .text("San Francisco BikeShare Trips and Weather 2016");
+		
+		
+		g.append("text")
+			.attr("x", 880)
+			.attr("y", 0)
+			.style("fill", "#000")
+			.text("Click text to show and hide");
+		
+		// Add the Trip line title
+		g.append("text")
+			.attr("x", 900)             
+			.attr("y", 20)    
+			.attr("class", "legend")
+			.style("fill", colorForTrips)  
+			//.style("fill", "#ffffff")         
+			.on("click", function(){
+				// Determine if current line is visible
+				var active   = lineTrips.active ? false : true,
+				  newOpacity = active ? 0 : 1;
+				// Hide or show the elements
+				d3.select("#lineTrips").style("opacity", newOpacity);
+				//d3.select("#blueAxis").style("opacity", newOpacity);
+				// Update whether or not the elements are active
+				lineTrips.active = active;
+			})
+			.text("Trips");
+		
+		// Add the Temperature line title
+		g.append("text")
+			.attr("x", 900)             
+			.attr("y", 40)    
+			.attr("class", "legend")
+			.style("fill", colorForTemp) 
+			//.style("fill", "#ffffff")          
+			.on("click", function(){
+				// Determine if current line is visible
+				var active   = lineTemperature.active ? false : true,
+				  newOpacity = active ? 0 : 1;
+				// Hide or show the elements
+				d3.select("#lineTemperature").style("opacity", newOpacity);
+				//d3.select("#blueAxis").style("opacity", newOpacity);
+				// Update whether or not the elements are active
+				lineTemperature.active = active;
+			})
+			.text("Temperature");
+		
+		// Add the WindSpeed line title
+		g.append("text")
+			.attr("x", 900)             
+			.attr("y", 60)    
+			.attr("class", "legend")
+			.style("fill", colorForWind) 
+			//.style("fill", "#ffffff")          
+			.on("click", function(){
+				// Determine if current line is visible
+				var active   = lineWindSpeed.active ? false : true,
+				  newOpacity = active ? 0 : 1;
+				// Hide or show the elements
+				d3.select("#lineWindSpeed").style("opacity", newOpacity);
+				//d3.select("#blueAxis").style("opacity", newOpacity);
+				// Update whether or not the elements are active
+				lineWindSpeed.active = active;
+			})
+			.text("WindSpeed");
+		
+		// Add the Visibility line title
+		g.append("text")
+			.attr("x", 900)             
+			.attr("y", 80)    
+			.attr("class", "legend")
+			.style("fill", colorForVis) 
+			//.style("fill", "#ffffff")          
+			.on("click", function(){
+				// Determine if current line is visible
+				var active   = lineVisibility.active ? false : true,
+				  newOpacity = active ? 0 : 1;
+				// Hide or show the elements
+				d3.select("#lineVisibility").style("opacity", newOpacity);
+				//d3.select("#blueAxis").style("opacity", newOpacity);
+				// Update whether or not the elements are active
+				lineVisibility.active = active;
+			})
+			.text("Visibility");
+		
+		});
+		
+		</script>
+		</div>
+	</body>
+</html>
