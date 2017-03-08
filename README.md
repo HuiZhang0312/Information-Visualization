@@ -5,4 +5,4 @@ Final projects: http://picso.org:8889/~classinfovis2016fall/projects/group-10/
 
 hw1: http://www.pitt.edu/~huz26/hw1/Overall.html
 
-hw2: http://www.pitt.edu/~huz26/hw2/index.html; http://www.pitt.edu/~huz26/hw2/Q2.html
+hw2: http://www.pitt.edu/~huz26/hw2/index.html      http://www.pitt.edu/~huz26/hw2/Q2.html
